@@ -1,0 +1,9 @@
+{
+  "camera_index": 0,
+  "templates_json": "data/templates/templates.json",
+  "captures_dir": "captures",
+  "outputs_dir": "outputs",
+  "queue_file": "queue/upload_queue.json",
+  "drive_remote_path": "gdrive:offline-ai-photo-booth",
+  "watermark_text": "SCHOOL EVENT"
+}

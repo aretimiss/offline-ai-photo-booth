@@ -4,20 +4,12 @@ from dataclasses import dataclass
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import (
-    QHBoxLayout,
-    QLabel,
-    QPushButton,
-    QStackedWidget,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QStackedWidget, QVBoxLayout, QWidget
 
 
 @dataclass
 class UIState:
     selected_template_index: int = 0
-    countdown_seconds: int = 3
 
 
 class BoothUI(QWidget):
@@ -49,17 +41,19 @@ class BoothUI(QWidget):
 
     def _big_btn(self, text: str) -> QPushButton:
         btn = QPushButton(text)
-        btn.setMinimumHeight(74)
-        btn.setStyleSheet("font-size: 30px; padding: 16px;")
+        btn.setMinimumHeight(72)
+        btn.setStyleSheet("font-size: 28px; padding: 14px;")
         return btn
 
     def _build_welcome_page(self) -> QWidget:
-        page = QWidget()
-        lay = QVBoxLayout(page)
+        page = QWidget(); lay = QVBoxLayout(page)
         lay.addStretch(); lay.addWidget(self._title("ยินดีต้อนรับสู่ซุ้มถ่ายภาพนักเรียน"))
-        hint = QLabel("แบมือเพื่อเริ่ม หรือกดปุ่มเริ่มใช้งาน")
-        hint.setAlignment(Qt.AlignmentFlag.AlignCenter); hint.setStyleSheet("font-size: 28px;")
-        lay.addWidget(hint)
+        self.welcome_hint = QLabel("แบมือเพื่อเริ่ม หรือกดปุ่มเริ่มใช้งาน")
+        self.welcome_hint.setAlignment(Qt.AlignmentFlag.AlignCenter); self.welcome_hint.setStyleSheet("font-size: 28px;")
+        lay.addWidget(self.welcome_hint)
+        self.welcome_gesture_debug = QLabel("กำลังรอคำสั่ง...")
+        self.welcome_gesture_debug.setAlignment(Qt.AlignmentFlag.AlignCenter); self.welcome_gesture_debug.setStyleSheet("font-size: 22px; color: #004488;")
+        lay.addWidget(self.welcome_gesture_debug)
         self.btn_start = self._big_btn("เริ่มใช้งาน")
         self.btn_welcome_back = self._big_btn("รีเซ็ตหน้าเริ่มต้น")
         lay.addWidget(self.btn_start); lay.addWidget(self.btn_welcome_back); lay.addStretch()
@@ -68,14 +62,21 @@ class BoothUI(QWidget):
     def _build_template_page(self) -> QWidget:
         page = QWidget(); lay = QVBoxLayout(page)
         lay.addWidget(self._title("เลือกธีมรูปภาพ"))
-        self.template_name = QLabel("ยังไม่ได้เลือก"); self.template_name.setAlignment(Qt.AlignmentFlag.AlignCenter); self.template_name.setStyleSheet("font-size: 30px;")
+        self.template_name = QLabel("ยังไม่ได้เลือก")
+        self.template_name.setAlignment(Qt.AlignmentFlag.AlignCenter); self.template_name.setStyleSheet("font-size: 30px;")
         lay.addWidget(self.template_name)
-        self.template_preview = QLabel("ตัวอย่างธีม"); self.template_preview.setAlignment(Qt.AlignmentFlag.AlignCenter); self.template_preview.setStyleSheet("font-size: 24px; border: 2px solid #777;"); self.template_preview.setMinimumHeight(340)
+        self.template_preview = QLabel("ตัวอย่างธีม")
+        self.template_preview.setAlignment(Qt.AlignmentFlag.AlignCenter); self.template_preview.setStyleSheet("font-size: 24px; border: 2px solid #777;"); self.template_preview.setMinimumHeight(330)
         lay.addWidget(self.template_preview)
-        hint = QLabel("ปัดซ้าย/ขวาเพื่อเปลี่ยนธีม หรือกดปุ่ม")
-        hint.setAlignment(Qt.AlignmentFlag.AlignCenter); hint.setStyleSheet("font-size: 24px;"); lay.addWidget(hint)
-        row = QHBoxLayout(); self.btn_prev_template = self._big_btn("◀ ธีมก่อนหน้า"); self.btn_next_template = self._big_btn("ธีมถัดไป ▶"); row.addWidget(self.btn_prev_template); row.addWidget(self.btn_next_template); lay.addLayout(row)
-        self.btn_to_camera = self._big_btn("ยืนยันธีมและไปหน้ากล้อง"); self.btn_back_home = self._big_btn("ย้อนกลับ")
+        self.template_gesture_debug = QLabel("กำลังรอคำสั่ง...")
+        self.template_gesture_debug.setAlignment(Qt.AlignmentFlag.AlignCenter); self.template_gesture_debug.setStyleSheet("font-size: 22px; color: #004488;")
+        lay.addWidget(self.template_gesture_debug)
+        row = QHBoxLayout()
+        self.btn_prev_template = self._big_btn("◀ ธีมก่อนหน้า")
+        self.btn_next_template = self._big_btn("ธีมถัดไป ▶")
+        row.addWidget(self.btn_prev_template); row.addWidget(self.btn_next_template); lay.addLayout(row)
+        self.btn_to_camera = self._big_btn("ยืนยันธีมและไปหน้ากล้อง")
+        self.btn_back_home = self._big_btn("ย้อนกลับ")
         lay.addWidget(self.btn_to_camera); lay.addWidget(self.btn_back_home)
         return page
 
@@ -83,11 +84,11 @@ class BoothUI(QWidget):
         page = QWidget(); lay = QVBoxLayout(page)
         lay.addWidget(self._title("จัดท่าทางหน้ากล้อง"))
         self.camera_feed = QLabel("กำลังเตรียมกล้อง...")
-        self.camera_feed.setAlignment(Qt.AlignmentFlag.AlignCenter); self.camera_feed.setMinimumHeight(450); self.camera_feed.setStyleSheet("font-size: 24px; border: 2px solid #777;")
+        self.camera_feed.setAlignment(Qt.AlignmentFlag.AlignCenter); self.camera_feed.setMinimumHeight(430); self.camera_feed.setStyleSheet("font-size: 24px; border: 2px solid #777;")
         lay.addWidget(self.camera_feed)
-        self.gesture_debug = QLabel("ยังไม่พบมือ\nคำสั่งที่ตรวจพบ: -\nความมั่นใจ: 0.00")
-        self.gesture_debug.setAlignment(Qt.AlignmentFlag.AlignCenter); self.gesture_debug.setStyleSheet("font-size: 24px; color: #004488;")
-        lay.addWidget(self.gesture_debug)
+        self.camera_gesture_debug = QLabel("กำลังรอคำสั่ง...")
+        self.camera_gesture_debug.setAlignment(Qt.AlignmentFlag.AlignCenter); self.camera_gesture_debug.setStyleSheet("font-size: 22px; color: #004488;")
+        lay.addWidget(self.camera_gesture_debug)
         self.camera_status = QLabel("ชูนิ้วโป้งเพื่อถ่ายภาพ | กำมือเพื่อย้อนกลับ")
         self.camera_status.setAlignment(Qt.AlignmentFlag.AlignCenter); self.camera_status.setStyleSheet("font-size: 24px;")
         lay.addWidget(self.camera_status)
@@ -97,8 +98,15 @@ class BoothUI(QWidget):
     def _build_countdown_page(self) -> QWidget:
         page = QWidget(); lay = QVBoxLayout(page)
         lay.addWidget(self._title("เตรียมตัวถ่ายภาพ"))
-        self.countdown_label = QLabel("3"); self.countdown_label.setAlignment(Qt.AlignmentFlag.AlignCenter); self.countdown_label.setStyleSheet("font-size: 120px; font-weight: bold;")
+        self.countdown_feed = QLabel("กำลังเตรียมภาพสด...")
+        self.countdown_feed.setAlignment(Qt.AlignmentFlag.AlignCenter); self.countdown_feed.setMinimumHeight(430); self.countdown_feed.setStyleSheet("font-size: 24px; border: 2px solid #777;")
+        lay.addWidget(self.countdown_feed)
+        self.countdown_label = QLabel("3")
+        self.countdown_label.setAlignment(Qt.AlignmentFlag.AlignCenter); self.countdown_label.setStyleSheet("font-size: 110px; font-weight: bold; color: #C00000;")
         lay.addWidget(self.countdown_label)
+        self.countdown_gesture_debug = QLabel("กำลังรอคำสั่ง...")
+        self.countdown_gesture_debug.setAlignment(Qt.AlignmentFlag.AlignCenter); self.countdown_gesture_debug.setStyleSheet("font-size: 22px; color: #004488;")
+        lay.addWidget(self.countdown_gesture_debug)
         self.btn_cancel_countdown = self._big_btn("ยกเลิกและย้อนกลับ")
         lay.addWidget(self.btn_cancel_countdown)
         return page
@@ -113,18 +121,23 @@ class BoothUI(QWidget):
     def _build_result_page(self) -> QWidget:
         page = QWidget(); lay = QVBoxLayout(page)
         lay.addWidget(self._title("เสร็จเรียบร้อย"))
-        self.result_image = QLabel("รูปภาพผลลัพธ์"); self.result_image.setAlignment(Qt.AlignmentFlag.AlignCenter); self.result_image.setMinimumHeight(380); self.result_image.setStyleSheet("font-size: 24px; border: 2px solid #777;")
+        self.result_image = QLabel("รูปภาพผลลัพธ์")
+        self.result_image.setAlignment(Qt.AlignmentFlag.AlignCenter); self.result_image.setMinimumHeight(360); self.result_image.setStyleSheet("font-size: 24px; border: 2px solid #777;")
         lay.addWidget(self.result_image)
-        self.result_code = QLabel("รหัสรูปภาพ: -"); self.result_code.setAlignment(Qt.AlignmentFlag.AlignCenter); self.result_code.setStyleSheet("font-size: 36px; font-weight: bold;")
+        self.result_code = QLabel("รหัสรูปภาพ: -")
+        self.result_code.setAlignment(Qt.AlignmentFlag.AlignCenter); self.result_code.setStyleSheet("font-size: 36px; font-weight: bold;")
         lay.addWidget(self.result_code)
-        self.qr_placeholder = QLabel("พื้นที่ QR: (จะเพิ่มภายหลัง)"); self.qr_placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter); self.qr_placeholder.setStyleSheet("font-size: 24px;")
+        self.qr_placeholder = QLabel("พื้นที่ QR: (จะเพิ่มภายหลัง)")
+        self.qr_placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter); self.qr_placeholder.setStyleSheet("font-size: 24px;")
         lay.addWidget(self.qr_placeholder)
-        self.btn_finish = self._big_btn("เสร็จสิ้นและกลับหน้าแรก"); self.btn_result_back = self._big_btn("ย้อนกลับไปเลือกธีม")
+        self.btn_finish = self._big_btn("เสร็จสิ้นและกลับหน้าแรก")
+        self.btn_result_back = self._big_btn("ย้อนกลับไปเลือกธีม")
         lay.addWidget(self.btn_finish); lay.addWidget(self.btn_result_back)
         return page
 
     def show_page(self, name: str) -> None:
-        self.stack.setCurrentWidget({"welcome": self.welcome_page, "template": self.template_page, "camera": self.camera_page, "countdown": self.countdown_page, "processing": self.processing_page, "result": self.result_page}[name])
+        mapping = {"welcome": self.welcome_page, "template": self.template_page, "camera": self.camera_page, "countdown": self.countdown_page, "processing": self.processing_page, "result": self.result_page}
+        self.stack.setCurrentWidget(mapping[name])
 
     def set_template_preview(self, template_name: str, image_path: str) -> None:
         self.template_name.setText(f"ธีมที่เลือก: {template_name}")
@@ -142,8 +155,16 @@ class BoothUI(QWidget):
             return
         self.result_image.setPixmap(pixmap.scaled(740, 420, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
 
-    def set_gesture_debug(self, hand_detected: bool, gesture_th: str, confidence: float) -> None:
+    def set_gesture_debug(self, page: str, hand_detected: bool, gesture_th: str, confidence: float) -> None:
         hand_text = "ตรวจพบมือ" if hand_detected else "ยังไม่พบมือ"
-        self.gesture_debug.setText(
-            f"{hand_text}\nคำสั่งที่ตรวจพบ: {gesture_th}\nความมั่นใจ: {confidence:.2f}"
-        )
+        text = f"{hand_text} | คำสั่งที่ตรวจพบ: {gesture_th} | ความมั่นใจ: {confidence:.2f}"
+        if gesture_th == "-":
+            text = f"{hand_text} | กำลังรอคำสั่ง..."
+        if page == "welcome":
+            self.welcome_gesture_debug.setText(text)
+        elif page == "template":
+            self.template_gesture_debug.setText(text)
+        elif page == "camera":
+            self.camera_gesture_debug.setText(text)
+        elif page == "countdown":
+            self.countdown_gesture_debug.setText(text)

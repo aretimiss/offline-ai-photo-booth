@@ -1,0 +1,22 @@
+{
+  "templates": [
+    {
+      "id": "tpl_graduation_01",
+      "name": "Graduation Classic",
+      "image_path": "sample_graduation_01.jpg",
+      "description": "Classic cap-and-gown portrait style"
+    },
+    {
+      "id": "tpl_science_01",
+      "name": "Science Lab Hero",
+      "image_path": "sample_science_01.jpg",
+      "description": "Student portrait with futuristic lab background"
+    },
+    {
+      "id": "tpl_sports_01",
+      "name": "Sports Champion",
+      "image_path": "sample_sports_01.jpg",
+      "description": "Dynamic sports poster style"
+    }
+  ]
+}

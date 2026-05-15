@@ -12,23 +12,21 @@ GestureName = Literal["open_palm", "thumbs_up", "swipe_left", "swipe_right", "fi
 
 @dataclass
 class GestureEvent:
+    hand_detected: bool
     name: GestureName
     confidence: float = 0.0
 
 
 class GestureRecognizer:
-    """
-    Lightweight MediaPipe-based gesture recognizer scaffold.
-    Heuristics are intentionally simple in v1 and should be tuned for production.
-    """
+    """Simple and forgiving MediaPipe gesture recognizer for kiosk use."""
 
     def __init__(self) -> None:
         self.mp_hands = mp.solutions.hands
         self.hands = self.mp_hands.Hands(
             static_image_mode=False,
             max_num_hands=1,
-            min_detection_confidence=0.6,
-            min_tracking_confidence=0.6,
+            min_detection_confidence=0.45,
+            min_tracking_confidence=0.45,
         )
         self.prev_x: float | None = None
 
@@ -38,37 +36,43 @@ class GestureRecognizer:
 
         if not result.multi_hand_landmarks:
             self.prev_x = None
-            return GestureEvent("none", 0.0)
+            return GestureEvent(False, "none", 0.0)
 
         landmarks = result.multi_hand_landmarks[0].landmark
 
-        tip_ids = [4, 8, 12, 16, 20]
         wrist = landmarks[0]
-        tips = [landmarks[i] for i in tip_ids]
+        index_tip = landmarks[8]
+        middle_tip = landmarks[12]
+        ring_tip = landmarks[16]
+        pinky_tip = landmarks[20]
+        thumb_tip = landmarks[4]
 
-        extended = sum(1 for tip in tips[1:] if tip.y < wrist.y)
-        thumb_up = tips[0].y < landmarks[2].y
+        non_thumb_extended = sum(
+            1
+            for tip in [index_tip, middle_tip, ring_tip, pinky_tip]
+            if tip.y < wrist.y + 0.05
+        )
+        thumb_up = thumb_tip.y < landmarks[3].y + 0.02
 
-        current_x = tips[1].x
-        swipe_threshold = 0.08
+        current_x = index_tip.x
         if self.prev_x is not None:
             dx = current_x - self.prev_x
-            self.prev_x = current_x
-            if dx > swipe_threshold:
-                return GestureEvent("swipe_right", min(1.0, abs(dx) * 4))
-            if dx < -swipe_threshold:
-                return GestureEvent("swipe_left", min(1.0, abs(dx) * 4))
-        else:
-            self.prev_x = current_x
+            if dx > 0.12:
+                self.prev_x = current_x
+                return GestureEvent(True, "swipe_right", min(1.0, abs(dx) * 3))
+            if dx < -0.12:
+                self.prev_x = current_x
+                return GestureEvent(True, "swipe_left", min(1.0, abs(dx) * 3))
+        self.prev_x = current_x
 
-        if extended >= 3 and not thumb_up:
-            return GestureEvent("open_palm", 0.8)
-        if thumb_up and extended <= 1:
-            return GestureEvent("thumbs_up", 0.8)
-        if extended == 0:
-            return GestureEvent("fist", 0.8)
+        if non_thumb_extended >= 3 and not thumb_up:
+            return GestureEvent(True, "open_palm", 0.75)
+        if thumb_up and non_thumb_extended <= 2:
+            return GestureEvent(True, "thumbs_up", 0.8)
+        if non_thumb_extended <= 1:
+            return GestureEvent(True, "fist", 0.7)
 
-        return GestureEvent("none", 0.2)
+        return GestureEvent(True, "none", 0.25)
 
     def close(self) -> None:
         self.hands.close()

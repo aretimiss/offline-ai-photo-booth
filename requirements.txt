@@ -1,5 +1,5 @@
 opencv-python>=4.9.0
-mediapipe>=0.10.14
+mediapipe==0.10.14
 PySide6>=6.7.0
-numpy>=1.26.0
+numpy==1.26.4
 Pillow>=10.0.0
